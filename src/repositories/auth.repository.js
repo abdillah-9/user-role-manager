@@ -9,14 +9,14 @@ module.exports.selectUserById = async(id) => {
     return await db('users').select('*').where({id});
 }
 
-module.exports.insertNewUser = async(userInputData) => {
-    const {first_name, last_name, email, password, role_id, refresh_token} = userInputData;
-
-    return await db('users').insert({first_name, last_name, email, password, role_id, refresh_token});
+module.exports.insertUserRole = async(role_name, trx) => {
+    return await (trx || db)('roles').insert({role_name});
 }
 
-module.exports.insertUserRole = async(role_name) => {
-    return await db('roles').insert({role_name});
+module.exports.insertNewUser = async(userInputData, trx) => {
+    const {first_name, last_name, email, password, role_id, refresh_token} = userInputData;
+
+    return await (trx || db)('users').insert({first_name, last_name, email, password, role_id, refresh_token});
 }
 
 module.exports.selectRefreshtokenByUserId = async(id) => {

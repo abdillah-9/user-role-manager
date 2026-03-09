@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const AppError = require('../utils/AppError');
 require('dotenv').config();
 const userDto = require('../dtos/user.dto');
+const db = require('../config/knex');
 
 module.exports.signUp = async(userInputData)=>{
     //check if email exists
@@ -17,13 +18,24 @@ module.exports.signUp = async(userInputData)=>{
     //creating tokens, hashing password and inserting user in DB
     const password = await bcrypt.hash(userInputData.password,7);
 
-    try{
-        const [role_id] = await authRepositories.insertUserRole(role_name);
-        const [user_id] = await authRepositories.insertNewUser(userInputData);
-    }
-    catch(error){
-        throw new AppError("Something went wrong", 402);
-    }
+    // try{
+    //     const [role_id] = await authRepositories.insertUserRole(role_name);
+    //     const [user_id] = await authRepositories.insertNewUser(userInputData);
+    // }
+    // catch(error){
+    //     throw new AppError("Something went wrong", 402);
+    // }
+
+    //Above is a normal way to do it WHILE below I have tried to use transactions
+    db.transaction( async (trx)=>{
+        try{
+            await authRepositories.insertUserRole(role_name, trx);
+            await authRepositories.insertNewUser(userInputData, trx);
+        }
+        catch(e){
+            throw new AppError("Transactions failed, please try again.", 502);
+        }
+    });    
 
     const access_token =  jwt.sign({id}, process.env.SECRET_ACCESS_KEY,{expiresIn:'15min'});
     const plain_refresh_token = jwt.sign({id}, process.env.SECRET_REFRESH_KEY,{expiresIn:'7d'});
