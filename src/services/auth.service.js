@@ -5,6 +5,7 @@ const AppError = require('../utils/AppError');
 require('dotenv').config();
 const userDto = require('../dtos/user.dto');
 const db = require('../config/knex');
+const logger = require('../utils/pino');
 
 module.exports.signUp = async(userInputData)=>{
     //check if email exists
@@ -12,6 +13,7 @@ module.exports.signUp = async(userInputData)=>{
 
     if(user){
         // send "Account exists" response using AppError
+        logger.info({user_id: user.id, user_email: user.email},"Account exists");
         throw new AppError("Account exists");
     }
 
@@ -27,9 +29,9 @@ module.exports.signUp = async(userInputData)=>{
     // }
 
     //Above is a normal way to do it WHILE below I have tried to use transactions
-    db.transaction( async (trx)=>{
+    await db.transaction( async (trx)=>{
         try{
-            await authRepositories.insertUserRole(role_name, trx);
+            //await authRepositories.insertUserRole(userInputData.role_name, trx);
             await authRepositories.insertNewUser(userInputData, trx);
         }
         catch(e){
@@ -39,12 +41,12 @@ module.exports.signUp = async(userInputData)=>{
 
     const access_token =  jwt.sign({id}, process.env.SECRET_ACCESS_KEY,{expiresIn:'15min'});
     const plain_refresh_token = jwt.sign({id}, process.env.SECRET_REFRESH_KEY,{expiresIn:'7d'});
-    const refresh_token = await crypto.createHash('sha256').digest(plain_refresh_token).update('hex');
+    const refresh_token = await crypto.createHash('sha256').update(plain_refresh_token).digest('hex');
     const tokens = {access_token, refresh_token};
     const message = "You are successful signed-In";
     const statusCode = 201;
 
-    //return DTO
+    //return DTO...
     userDto(
         userInputData.id, userInputData.role, tokens, message, statusCode, userInputData.first_name, userInputData.last_name
     );
@@ -84,7 +86,7 @@ module.exports.signIn = async(requestBody, cookie_access_token = access_token, c
     }
 
     //If it is valid then let us compare it with our DB refresh_token
-    const hashed_cookie_refresh_token = await crypto.createHash('sha256').digest(cookie_refresh_token).update('hex');
+    const hashed_cookie_refresh_token = await crypto.createHash('sha256').update(cookie_refresh_token).digest('hex');
 
     if(hashed_cookie_refresh_token != user.refresh_token){
         throw  new AppError("Refresh token  is not valid", 501)
@@ -98,7 +100,7 @@ module.exports.signIn = async(requestBody, cookie_access_token = access_token, c
         refresh_token : new_refresh_token
     };
 
-    const updateRefresh_token = await authRepositories.updateUserRefreshtoken(user.id, crypto.createHash('sha256').digest(new_refresh_token).update('hex'));
+    const updateRefresh_token = await authRepositories.updateUserRefreshtoken(user.id, crypto.createHash('sha256').update(new_refresh_token).digest('hex'));
 
     if(!updateRefresh_token){
         throw new AppError('Something happened, please retry to login', 402);
@@ -118,7 +120,7 @@ module.exports.signOut = async(cookie_refresh_token = refresh_token)=>{
         throw new AppError("Refresh token is not valid", 502);
     }
 
-    const hashed_cookie_refresh_token = crypto.createHash('sha256').digest(cookie_refresh_token).update('hex');
+    const hashed_cookie_refresh_token = crypto.createHash('sha256').update(cookie_refresh_token).digest('hex');
 
     const db_refresh_token = [user.refresh_token] = authRepositories.selectUserById(refresh_token_payload.id);
 
