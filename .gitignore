@@ -19,8 +19,13 @@ front-end/node_modules/
 # Front-end build output
 front-end/build/
 
-# Architectutre and design
-front-end/architectutre
-front-end/design
+# Back-end Environment files
+front-end/.env
 
-front-end/a2
+# Back-end Logs
+front-end/logs/
+*.log
+
+# Architectutre and design
+front-end/.architecture
+front-end/.design
