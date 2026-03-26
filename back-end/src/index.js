@@ -22,6 +22,11 @@ app.use(httpLogger);
 //limiter
 app.use(rateLimiter);
 
+//home route
+sapp.get('/', (req, res) => {
+    res.send('<h1>Docker + NGINX + PM2 is working! 🚀</h1>');
+});
+
 //auth routes
 app.use('/api', authRoutes.signIn);
 app.use('/api', authRoutes.signUp);

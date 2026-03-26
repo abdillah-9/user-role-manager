@@ -1,12 +1,14 @@
 {
-  "name": "User and role management system",
+  "name": "User and role manager",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": " node src/index.js",
-    "dev": " nodemon src/index.js"
+    "dev": " nodemon src/index.js",
+    "pm2:start":"./node_modules/.bin/pm2-runtime start src/index.js -i max",
+    "pm2:dev": "./node_modules/.bin/pm2-runtime start src/index.js -i 1 --watch"
   },
   "keywords": [],
   "author": "",
@@ -24,7 +26,8 @@
     "mysql2": "^3.18.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
-    "pino-prettier": "^3.0.1-dev"
+    "pino-prettier": "^3.0.1-dev",
+    "pm2": "^6.0.14"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

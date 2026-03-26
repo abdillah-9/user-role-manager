@@ -1,0 +1,51 @@
+services:
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "81:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./front-end/dist:/usr/share/nginx/html
+      - ./certs:/etc/nginx/certs
+    depends_on:
+      - app
+  db:
+    image: mysql:8.0
+    restart: always
+    environment: 
+      MYSQL_DATABASE: user_and_role_manager_database
+      MYSQL_USER: phpmyadmin
+      MYSQL_PASSWORD: Sabdillah@1999
+      MYSQL_ROOT_PASSWORD: root_password_super_secret
+    ports: 
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 60
+    volumes:
+      - user_and_role_manager_data:/var/lib/mysql
+
+  app:
+    build: .
+    # ports:
+    #   - "4000:4000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app   
+      - ./logs:/root/.pm2/logs          
+      - /app/node_modules
+      - user_and_role_manager_uploads:/app/uploads
+    environment:
+      - SERVER_NAME=db 
+      - USER_NAME=phpmyadmin
+      - USER_PASSWORD=Sabdillah@1999
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  user_and_role_manager_data:
+  user_and_role_manager_uploads:
