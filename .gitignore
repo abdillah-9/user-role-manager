@@ -18,3 +18,7 @@ front-end/node_modules/
 
 # Front-end build output
 front-end/build/
+
+# Architectutre and design
+front-end/architectutre
+front-end/design
